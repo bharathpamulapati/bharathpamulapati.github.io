@@ -1,0 +1,30 @@
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Dependency directories
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Build and cache artifacts
+dist/
+build/
+coverage/
+.cache/
+.parcel-cache/
+
+# Editor files
+.idea/
+*.swp
+*.swo
