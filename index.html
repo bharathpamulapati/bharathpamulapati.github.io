@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Professional IBW-Based Nutrition & Enteral Feeding Prescription System">
+    <title>Clinical Diet & Enteral Feeding Calculator</title>
+    <link rel="icon" href="medical-symbol.png" type="image/png">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ── Protein range buttons ── */
+        .protein-range-options {
+            display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;
+        }
+        .protein-range-btn {
+            padding: 15px 20px; border: 2px solid var(--color-border);
+            border-radius: var(--radius-md); cursor: pointer;
+            transition: var(--transition); flex: 1; min-width: 120px;
+            text-align: center; font-weight: 600; background: white;
+        }
+        .protein-range-btn:hover { border-color: var(--color-primary); background: #f0f2ff; }
+        .protein-range-btn.selected {
+            border-color: var(--color-primary);
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+            color: var(--color-white);
+        }
+
+        /* ── Target % buttons ── */
+        .target-pct-options {
+            display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;
+        }
+        .target-pct-btn {
+            padding: 15px 20px; border: 2px solid var(--color-border);
+            border-radius: var(--radius-md); cursor: pointer;
+            transition: var(--transition); flex: 1; min-width: 100px;
+            text-align: center; font-weight: 600; background: white;
+            font-family: inherit; font-size: 1em;
+        }
+        .target-pct-btn:hover { border-color: #e67e22; background: #fef9f0; }
+        .target-pct-btn.selected {
+            border-color: #e67e22;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+        }
+
+        /* ── Feeding hours ── */
+        .feeding-hours-options { display: flex; gap: 10px; margin: 15px 0; }
+        .feeding-hours-btn {
+            flex: 1; padding: 15px; text-align: center;
+            border: 2px solid var(--color-border); border-radius: var(--radius-md);
+            cursor: pointer; font-weight: 600; transition: var(--transition);
+            background: white; font-family: inherit;
+        }
+        .feeding-hours-btn:hover { border-color: var(--color-secondary); background: #f1f8f4; }
+        .feeding-hours-btn.selected {
+            border-color: var(--color-secondary);
+            background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-light) 100%);
+            color: var(--color-white);
+        }
+
+        /* ── Rate buttons ── */
+        .rate-buttons {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 10px; margin-top: 15px;
+        }
+        .rate-btn {
+            padding: 12px 8px; background: white;
+            border: 2px solid var(--color-border); border-radius: var(--radius-sm);
+            cursor: pointer; font-weight: 600; font-size: 1em;
+            transition: var(--transition); text-align: center; font-family: inherit;
+        }
+        .rate-btn:hover  { border-color: var(--color-success); background: #f1f8f4; }
+        .rate-btn.selected { border-color: var(--color-success); background: var(--color-success); color: white; }
+
+        /* ── Calorie density badges ── */
+        .badge-calden-low  { background: #e8f4fd; color: #01579b; }
+        .badge-calden-high { background: #fce4ec; color: #880e4f; }
+
+        /* ── Highlighted spec item ── */
+        .spec-item--highlight { border: 2px solid #667eea; background: #f0f2ff !important; }
+        .spec-item--highlight .spec-label { color: #4a57d0; }
+        .spec-item--highlight .spec-value { color: #3d4fc4; }
+
+        /* ── Product category ── */
+        .product-category { color: #666; font-size: 0.9em; margin-bottom: 10px; font-style: italic; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <h1>🏥 Clinical Diet & Enteral Feeding Calculator</h1>
+        <p>IBW-Based Nutrition with Target Analysis</p>
+    </header>
+
+    <main class="content">
+
+        <!-- ── Step 1: Patient Info ── -->
+        <section class="input-section">
+            <h2 class="section-title">Step 1: Patient Information</h2>
+            <form id="patient-form">
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="height">Height (cm) *</label>
+                        <input type="number" id="height" placeholder="e.g., 176" min="100" max="250" step="0.1" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="age">Age (years) *</label>
+                        <input type="number" id="age" placeholder="e.g., 45" min="1" max="120" step="1" required>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Gender *</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="gender" value="male" checked><span>Male</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="gender" value="female"><span>Female</span>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn">Calculate Ideal Body Weight</button>
+            </form>
+        </section>
+
+        <!-- ── Step 2: IBW + Protein + Target % ── -->
+        <section id="ibw-selection" class="input-section hidden">
+            <h2 class="section-title">Step 2: Select IBW Method &amp; Nutrition Targets</h2>
+            <p class="section-description">Select the IBW calculation method:</p>
+            <div id="ibw-cards"></div>
+
+            <!-- Protein range -->
+            <div class="input-group">
+                <label>Select Protein Requirement *</label>
+                <div class="protein-range-options">
+                    <div class="protein-range-btn selected" data-value="1.2-1.5">1.2–1.5 g/kg/day</div>
+                    <div class="protein-range-btn"          data-value="1.5-2.0">1.5–2.0 g/kg/day</div>
+                    <div class="protein-range-btn"          data-value="2.0-2.2">2.0–2.2 g/kg/day</div>
+                </div>
+                <input type="hidden" id="protein-range-select" value="1.2-1.5">
+            </div>
+
+            <!-- Target % selector -->
+            <div class="input-group">
+                <label>Select Feeding Target *
+                    <span style="font-weight:400;color:#888;font-size:0.9em;margin-left:8px;">
+                        (percentage of total calories to target)
+                    </span>
+                </label>
+                <div class="target-pct-options">
+                    <button type="button" class="target-pct-btn" data-pct="0.3">
+                        30%<br><small style="font-weight:400;">Day 1 target</small>
+                    </button>
+                    <button type="button" class="target-pct-btn" data-pct="0.5">
+                        50%<br><small style="font-weight:400;">Day 2 target</small>
+                    </button>
+                    <button type="button" class="target-pct-btn selected" data-pct="0.7">
+                        70%<br><small style="font-weight:400;">Day 3 target</small>
+                    </button>
+                    <button type="button" class="target-pct-btn" data-pct="1.0">
+                        100%<br><small style="font-weight:400;">Full target</small>
+                    </button>
+                </div>
+            </div>
+
+            <button type="button" class="btn hidden" id="calculate-diet-btn">
+                Calculate Nutrition Requirements
+            </button>
+        </section>
+
+        <!-- ── Results ── -->
+        <div id="results" class="results hidden">
+            <h2 class="results-title">📊 Nutrition Calculations</h2>
+
+            <!-- Selected Parameters -->
+            <div class="result-card">
+                <h3>🎯 Selected Parameters</h3>
+                <div class="info-box">
+                    <p><strong>IBW Method:</strong> <span id="selected-method">-</span></p>
+                    <p><strong>Ideal Body Weight:</strong> <span id="selected-ibw" class="highlight">-</span></p>
+                    <p><strong>Protein Range:</strong> <span id="selected-protein-range" class="highlight">-</span></p>
+                </div>
+            </div>
+
+            <!-- Calculation breakdown -->
+            <div class="result-card">
+                <h3>📈 Nutrition Requirements</h3>
+                <div class="result-row">
+                    <span class="result-label">Harris-Benedict REE</span>
+                    <span class="result-value" id="ree-value">-</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Non-protein Calories (25-30 kcal/kg)</span>
+                    <span class="result-value" id="non-protein-cal">-</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Protein Calories (4 kcal/g)</span>
+                    <span class="result-value" id="protein-cal">-</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Total Calories (100%)</span>
+                    <span class="result-value highlight" id="total-cal">-</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label" id="target-cal-label">🎯 Target Calories (70%)</span>
+                    <span class="result-value highlight-green" id="target-cal">-</span>
+                </div>
+            </div>
+
+            <!-- Product selection -->
+            <div class="result-card">
+                <h3>🍼 Step 3: Select Enteral Nutrition Product</h3>
+                <div class="filter-section">
+                    <div class="filter-header">
+                        <div>
+                            <h4>🔍 Filter &amp; Sort Products</h4>
+                            <p class="filter-description">Results automatically sorted by selected filter</p>
+                        </div>
+                        <button class="sort-toggle" id="sort-toggle" aria-label="Toggle sort order">
+                            <span class="sort-icon" id="sort-icon">↑</span>
+                            <span id="sort-text">Ascending</span>
+                        </button>
+                    </div>
+                    <div class="filter-chips">
+                        <label class="filter-chip">
+                            <input type="checkbox" id="filter-low-sodium">
+                            <span>Low Sodium (≤200 mg)</span>
+                        </label>
+                        <label class="filter-chip">
+                            <input type="checkbox" id="filter-fluid-restriction">
+                            <span>Fluid Restriction (≥2 kcal/ml)</span>
+                        </label>
+                        <label class="filter-chip">
+                            <input type="checkbox" id="filter-high-protein">
+                            <span>High Protein (≥15 g)</span>
+                        </label>
+                        <label class="filter-chip">
+                            <input type="checkbox" id="filter-low-protein">
+                            <span>Low Protein (≤12 g)</span>
+                        </label>
+                        <label class="filter-chip">
+                            <input type="checkbox" id="filter-low-calorie-density">
+                            <span>Low Cal Density (≤0.7 kcal/ml)</span>
+                        </label>
+                        <label class="filter-chip">
+                            <input type="checkbox" id="filter-high-calorie-density">
+                            <span>High Cal Density (≥1.5 kcal/ml)</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="product-list"></div>
+            </div>
+
+            <!-- Dilution controls -->
+            <div id="dilution-controls" class="hidden">
+                <div class="result-card">
+                    <h3>⚙️ Step 4: Configure Feed</h3>
+                    <div class="dilution-control-section">
+                        <h4>Select Dilution Type</h4>
+                        <div class="dilution-options">
+                            <label class="dilution-card">
+                                <input type="radio" name="dilution-type" value="half">
+                                <div class="dilution-title">½ Standard</div>
+                                <div class="dilution-description">Half concentration</div>
+                            </label>
+                            <label class="dilution-card selected">
+                                <input type="radio" name="dilution-type" value="standard" checked>
+                                <div class="dilution-title">Standard</div>
+                                <div class="dilution-description">Normal dilution</div>
+                            </label>
+                            <label class="dilution-card">
+                                <input type="radio" name="dilution-type" value="double">
+                                <div class="dilution-title">2× Standard</div>
+                                <div class="dilution-description">Double concentration</div>
+                            </label>
+                        </div>
+
+                        <div style="margin:25px 0;">
+                            <label style="display:block;font-weight:600;color:var(--color-success-dark);margin-bottom:10px;font-size:1.1em;">
+                                Select Feeding Schedule
+                            </label>
+                            <div class="feeding-hours-options">
+                                <div class="feeding-hours-btn selected" data-hours="18">
+                                    18 hours<br><small>(6 AM – 12 AM)</small>
+                                </div>
+                                <div class="feeding-hours-btn" data-hours="24">
+                                    24 hours<br><small>(Continuous)</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin:25px 0;">
+                            <label style="display:block;font-weight:600;color:var(--color-success-dark);margin-bottom:10px;font-size:1.1em;">
+                                Select Feeding Rate (30–120 ml/hr)
+                            </label>
+                            <div id="rate-buttons" class="rate-buttons"></div>
+                        </div>
+
+                        <div id="dilution-preview" class="dilution-preview"></div>
+                    </div>
+
+                    <button type="button" class="btn btn-secondary">
+                        Generate Diet Prescription
+                    </button>
+                </div>
+            </div>
+
+            <!-- Final prescription -->
+            <div id="feeding-results" class="hidden">
+                <div class="result-card">
+                    <h3>📋 Diet Prescription</h3>
+                    <pre class="prescription-template" id="prescription-text"></pre>
+                    <button type="button" class="copy-btn">📋 Copy Prescription</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script src="data.js"></script>
+<script src="calculations.js"></script>
+<script src="ui.js"></script>
+<script src="app.js"></script>
+<script>
+    /* ── Protein range selection ── */
+    document.querySelectorAll('.protein-range-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.protein-range-btn').forEach(b => b.classList.remove('selected'));
+            this.classList.add('selected');
+            document.getElementById('protein-range-select').value = this.getAttribute('data-value');
+        });
+    });
+</script>
+</body>
+</html>
