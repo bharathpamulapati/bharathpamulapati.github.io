@@ -3,7 +3,7 @@
  */
 
 /**
- * Calculate Ideal Body Weight using three methods
+ * Calculate Ideal Body Weight using selected methods
  */
 function calculateIBWMethods(heightCm, gender) {
     const heightInches = heightCm / 2.54;
@@ -24,13 +24,6 @@ function calculateIBWMethods(heightCm, gender) {
                 : 45.5 + (2.3 * inchesOver5Feet),
             name: 'Devine',
             description: 'Commonly used for drug dosing calculations'
-        },
-        robinson: {
-            value: isMale
-                ? 52.0 + (1.9 * inchesOver5Feet)
-                : 49.0 + (1.7 * inchesOver5Feet),
-            name: 'Robinson',
-            description: 'Alternative validated formula'
         }
     };
 }
